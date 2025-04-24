@@ -1,48 +1,58 @@
 package compile;
 
-// REcompile.java
-// Author: Kai Meiklejohn (1632448)// Compiler.java
-// Holds our 3 arrays and grammar methods: expression(), term(), factor(), atom()
-
+/**
+ * Compiler.java
+ * Author: Kai Meiklejohn (1632448)
+ * Holds our three arrays and the grammar routines:
+ *   expression(), term(), factor(), atom()
+ * Builds an NFA in the form of three parallel arrays.
+ */
 public class Compiler {
-    // max number of states we can build
-    private static final int MAX = 1000;
-
-    // three arrays as in lectures
-    private static char   ch[]    = new char[MAX];
-    private static int    next1[] = new int[MAX];
-    private static int    next2[] = new int[MAX];
-    private static int    state;        // next free state index
-    private static String pattern;      // the regexp
-    private static int    j;            // current position in pattern
-
-    /** Initialise before parsing */
-    public static void init(String raw) {
-        // collapse ** → * if you like
-        pattern = raw.replace("**", "*");
-        j = 0;
-        state = 1;         // reserve 0 for the automatic start-branch
+    /** simple pair to hold entry and exit states of a submachine */
+    public static class Frag {
+        public final int start, end;
+        public Frag(int s, int e) { start = s; end = e; }
     }
 
-    /** Fill in one state record */
+    private static final int MAX = 10_000;  // adjust as needed
+
+    // the three arrays, indexed by state number
+    private static char ch[]    = new char[MAX];
+    private static int  next1[] = new int[MAX];
+    private static int  next2[] = new int[MAX];
+
+    private static String pattern;  // the regexp string
+    private static int    j;        // current parse position
+    private static int    state;    // next free state index
+
+    /** Initialise everything before parsing */
+    public static void init(String raw) {
+        // collapse "**" → "*"
+        pattern = raw.replace("**", "*");
+        j       = 0;
+        state   = 1;   // reserve state 0 for the wrapper
+    }
+
+    /** Record one state in the arrays */
     public static void setstate(int s, char c, int n1, int n2) {
         ch[s]    = c;
         next1[s] = n1;
         next2[s] = n2;
     }
 
-    /** Print all states 0…state-1 */
+    /** Print out states 0 through state-1 in the required format */
     public static void printFSM() {
         for (int i = 0; i < state; i++) {
-            String type = (ch[i] == '.') ? "WC"
-                         : (ch[i] == ' ') ? "BR"
-                         : Character.toString(ch[i]);
+            String type;
+            if      (ch[i] == '.') type = "WC";
+            else if (ch[i] == ' ') type = "BR";
+            else                   type = Character.toString(ch[i]);
             System.out.println(i + "," + type + "," + next1[i] + "," + next2[i]);
         }
     }
 
     //
-    // Grammar from lectures / spec:
+    // Grammar from spec:
     //   expression → term ( '|' term )*
     //   term       → factor+
     //   factor     → atom ( '*' | '+' | '?' )*
@@ -50,108 +60,123 @@ public class Compiler {
     //
 
     /** expression → term ( '|' term )* */
-    public static int expression() {
-        int start1 = term();
+    public static Frag expression() {
+        Frag left = term();
         while (j < pattern.length() && pattern.charAt(j) == '|') {
-            j++;                      // skip '|'
-            int start2 = term();      // parse right side
-            int b = state++;          // new branch state
-            setstate(b, ' ', start1, start2);
-            start1 = b;               // branch is now entry
+            j++;                    // skip '|'
+            Frag right = term();
+            // build new branch + accept
+            int b = state++;
+            int e = state++;
+            setstate(b, ' ', left.start, right.start);
+            setstate(e, ' ', e, e);
+            // patch former ends → new accept
+            setstate(left.end,  ' ', e, e);
+            setstate(right.end, ' ', e, e);
+            left = new Frag(b, e);
         }
-        return start1;
+        return left;
     }
 
     /** term → factor factor … (at least one) */
-    public static int term() {
-        int s = factor();
-        // as long as next char can start an atom
-        while (j < pattern.length()
-               && pattern.charAt(j) != ')'
-               && pattern.charAt(j) != '|') {
-            int s2 = factor();
-            // concatenation = just link the end of s → start of s2
-            // (in a full impl you’d patch the accept state of s to s2)
-            // for skeleton we’ll pretend every factor is 2-state
-            // and s is its start:
-            int a = state++;        // new accept state
-            setstate(a, ' ', s2, s2);
-            setstate(s+1, ' ', s2, s2);
-            s = s;  // start of the combined machine
+    public static Frag term() {
+        Frag f = factor();
+        // implicit concatenation: as long as next token can start an atom
+        while (j < pattern.length() && canStartAtom(pattern.charAt(j))) {
+            Frag g = factor();
+            // patch f’s end → g’s start
+            setstate(f.end, ' ', g.start, g.start);
+            f = new Frag(f.start, g.end);
         }
-        return s;
+        return f;
     }
 
     /** factor → atom ( '*' | '+' | '?' )* */
-    public static int factor() {
-        int s = atom();
+    public static Frag factor() {
+        Frag f = atom();
         while (j < pattern.length()) {
-            char c = pattern.charAt(j);
-            if (c == '*') {
+            char op = pattern.charAt(j);
+            if (op == '*') {
                 j++;
+                // closure: new branch+accept
                 int b = state++;
                 int e = state++;
-                setstate(b, ' ', s, e);  // branch: 0 or more
-                setstate(e, ' ', s, e);
-                s = b;
+                setstate(b, ' ', f.start, e);
+                setstate(e, ' ', f.start, e);
+                f = new Frag(b, e);
             }
-            else if (c == '+') {
+            else if (op == '+') {
                 j++;
-                // same as a a*  ⇒ concat(s, star(s))
-                int starB = state++;
-                int starE = state++;
-                setstate(starB, ' ', s, starE);
-                setstate(starE, ' ', s, starE);
-                // link s's accept to starB and reuse s
-                s = s;  // start stays same
-            }
-            else if (c == '?') {
-                j++;
+                // plus = one occurrence (f) then closure
+                // build closure on f:
                 int b = state++;
                 int e = state++;
-                setstate(b, ' ', s, e); // zero or one
+                setstate(b, ' ', f.start, e);
+                setstate(e, ' ', f.start, e);
+                // patch original end → loop
+                setstate(f.end, ' ', f.start, e);
+                f = new Frag(f.start, e);
+            }
+            else if (op == '?') {
+                j++;
+                // zero-or-one
+                int b = state++;
+                int e = state++;
+                setstate(b, ' ', f.start, e);
                 setstate(e, ' ', e, e);
-                s = b;
+                f = new Frag(b, e);
             }
             else break;
         }
-        return s;
+        return f;
     }
 
     /** atom → literal | '.' | '\'literal | '(' expression ')' */
-    public static int atom() {
+    public static Frag atom() {
         if (j >= pattern.length())
             throw new RuntimeException("Unexpected end of pattern");
 
         char c = pattern.charAt(j++);
+        // grouping
         if (c == '(') {
-            int s = expression();
-            if (j>=pattern.length() || pattern.charAt(j) != ')')
+            Frag sub = expression();
+            if (j >= pattern.length() || pattern.charAt(j) != ')')
                 throw new RuntimeException("Missing ')'");
             j++;
-            return s;
+            return sub;
         }
+        // wildcard
         else if (c == '.') {
             int s = state++;
             int e = state++;
             setstate(s, '.', e, e);
-            return s;
+            setstate(e, ' ', e, e);
+            return new Frag(s, e);
         }
+        // escape
         else if (c == '\\') {
-            if (j>=pattern.length())
+            if (j >= pattern.length())
                 throw new RuntimeException("Trailing '\\'");
             char lit = pattern.charAt(j++);
             int s = state++;
             int e = state++;
             setstate(s, lit, e, e);
-            return s;
+            setstate(e, ' ', e, e);
+            return new Frag(s, e);
         }
+        // literal
         else {
-            // literal
             int s = state++;
             int e = state++;
             setstate(s, c, e, e);
-            return s;
+            setstate(e, ' ', e, e);
+            return new Frag(s, e);
         }
+    }
+
+    /** Helper: which chars can start an atom? */
+    private static boolean canStartAtom(char c) {
+        return c == '(' || c == '.' || c == '\\' || (c != ')' && c != '|' 
+               && c != '*' && c != '+' && c != '?');
     }
 }
