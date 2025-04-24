@@ -157,6 +157,32 @@ main():
 | `*a`        | No     | `*` without preceding atom    |
 | `a\`        | No     | trailing backslash            |
 
+### Regular Expression Symbol Cheat Sheet
+
+| Symbol        | Meaning                                        | Example    | Matches                       | Doesn’t Match           |
+|---------------|------------------------------------------------|------------|-------------------------------|-------------------------|
+| **Literal**   | Any non-special character matches itself       | `a`        | `"a"`                         | `"b"`, `""`             |
+| `.`           | Wildcard: matches **any one** character        | `.`        | `"x"`, `"9"`, `"@"`           | `""` (empty string)     |
+| **Concatenation**<br>(juxtaposition) | Adjacent patterns match in sequence      | `ab`       | `"ab"`                        | `"a"`, `"b"`, `"abc"`   |
+| `*`           | Closure: **0 or more** of the preceding item   | `a*`       | `""`, `"a"`, `"aaaa"`         | `"b"`                   |
+| `+`           | **1 or more** of the preceding item            | `a+`       | `"a"`, `"aa"`, `"aaaaa"`      | `""`                    |
+| `?`           | **0 or 1** of the preceding item               | `a?`       | `""`, `"a"`                   | `"aa"`                  |
+| `|`           | Alternation: match **either** side             | `a|b`      | `"a"`, `"b"`                  | `"ab"`                  |
+| `(` `)`       | Grouping: treat sub-expression as one unit     | `(ab)*`    | `""`, `"ab"`, `"abab"`        | `"a"`, `"ba"`           |
+| `\` (escape)  | Next character is **literal**, not special     | `\*`       | `"*"`                         | `"a"`, `"**"`           |
+
+---
+
+### Operator Precedence (highest to lowest)
+
+| Precedence | Operators            | Description                                      |
+|------------|----------------------|--------------------------------------------------|
+| 1          | Escaped (`\x`)       | Makes `x` a literal, even if it’s normally special |
+| 2          | Grouping (`(` `)`)   | Controls order of evaluation                     |
+| 3          | Repetition (`*`, `+`, `?`) | Apply to the immediately preceding item       |
+| 4          | Concatenation        | Juxtaposition (e.g. `ab` means `a` then `b`)     |
+| 5          | Alternation (`|`)    | Lowest: split into two separate paths            |
+
 ---
 
 ## Search
