@@ -1,3 +1,4 @@
+package compile;
 // REcompile.java
 // Kai Meiklejohn
 // 1632448
