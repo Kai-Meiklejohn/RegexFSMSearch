@@ -153,7 +153,6 @@ main():
 | `a++`       | No     | double `+` is invalid         |
 | `(`         | No     | unmatched parenthesis         |
 | `a(b`       | No     | missing `)`                  |
-| ``a`        | No     |                              |
 | `*a`        | No     | `*` without preceding atom    |
 | `a\`        | No     | trailing backslash            |
 
