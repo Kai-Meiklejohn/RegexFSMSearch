@@ -1,23 +1,26 @@
 package compile;
+
 // REcompile.java
-// Kai Meiklejohn
-// 1632448
+// Author: Kai Meiklejohn (1632448)
+// Entry point: read one regexp, build FSM, print it.
 
 public class REcompile {
     public static void main(String[] args) {
-        // TODO
-        // Notes: make sure it takes in valid arguments
-        // if something like a** is provided, it should still let it passed in but make it a*
-        // but obviously something like a++ is not allwoed
+        if (args.length != 1) {
+            System.err.println("Usage: java REcompile \"<regexp>\"");
+            System.exit(1);
+        }
 
-        // our expressions allow +(or), *(0 to many)
-        // for eg ab means a then b
-        // a* means 0 or more a's
-        // a+b means a or b
-        // a+(bc) a or bc
-        // a+(bc)* a or bc 0 or more times
+        // 1) initialise parser/compiler
+        Compiler.init(args[0]);
 
-        //implement the code t hat tony made in the lecture (the one that he ssays is C like)
-        // write the sudo code that tony gave us first
+        // 2) parse & compile whole regexp → returns start state of machine
+        int entry = Compiler.expression();
+
+        // 3) make state 0 branch to real start
+        Compiler.setstate(0, ' ', entry, entry);
+
+        // 4) print all states 0…(nextState-1)
+        Compiler.printFSM();
     }
 }
