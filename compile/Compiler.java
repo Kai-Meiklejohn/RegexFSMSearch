@@ -5,7 +5,7 @@ package compile;
  * Author: Kai Meiklejohn (1632448)
  * Holds our three arrays and the grammar routines:
  *   expression(), term(), factor(), atom()
- * Builds an NFA in the form of three parallel arrays.
+ * Builds a nondeterministic FSM in three parallel arrays.
  */
 public class Compiler {
     /** simple pair to hold entry and exit states of a submachine */
@@ -14,9 +14,9 @@ public class Compiler {
         public Frag(int s, int e) { start = s; end = e; }
     }
 
-    private static final int MAX = 10_000;  // adjust as needed
+    private static final int MAX = 10_000;
 
-    // the three arrays, indexed by state number
+    // the three parallel arrays, indexed by state #
     private static char ch[]    = new char[MAX];
     private static int  next1[] = new int[MAX];
     private static int  next2[] = new int[MAX];
@@ -25,12 +25,12 @@ public class Compiler {
     private static int    j;        // current parse position
     private static int    state;    // next free state index
 
-    /** Initialise everything before parsing */
+    /** initialise before parsing */
     public static void init(String raw) {
-        // collapse "**" → "*"
+        // collapse "**" into "*"
         pattern = raw.replace("**", "*");
         j       = 0;
-        state   = 1;   // reserve state 0 for the wrapper
+        state   = 1;   // reserve state 0 for the top-level branch
     }
 
     /** Record one state in the arrays */
@@ -40,7 +40,7 @@ public class Compiler {
         next2[s] = n2;
     }
 
-    /** Print out states 0 through state-1 in the required format */
+    /** print states 0 … state-1 as "id,type,next1,next2" */
     public static void printFSM() {
         for (int i = 0; i < state; i++) {
             String type;
@@ -63,16 +63,19 @@ public class Compiler {
     public static Frag expression() {
         Frag left = term();
         while (j < pattern.length() && pattern.charAt(j) == '|') {
-            j++;                    // skip '|'
+            j++;                     // skip '|'
             Frag right = term();
-            // build new branch + accept
+
+            // make new branch + accept
             int b = state++;
             int e = state++;
             setstate(b, ' ', left.start, right.start);
-            setstate(e, ' ', e, e);
-            // patch former ends → new accept
+            // patch both sub-machines to go to e
             setstate(left.end,  ' ', e, e);
             setstate(right.end, ' ', e, e);
+            // accept state has no outgoing transitions
+            setstate(e, ' ', -1, -1);
+
             left = new Frag(b, e);
         }
         return left;
@@ -81,10 +84,9 @@ public class Compiler {
     /** term → factor factor … (at least one) */
     public static Frag term() {
         Frag f = factor();
-        // implicit concatenation: as long as next token can start an atom
         while (j < pattern.length() && canStartAtom(pattern.charAt(j))) {
             Frag g = factor();
-            // patch f’s end → g’s start
+            // concatenate: patch f's accept to g.start
             setstate(f.end, ' ', g.start, g.start);
             f = new Frag(f.start, g.end);
         }
@@ -98,32 +100,30 @@ public class Compiler {
             char op = pattern.charAt(j);
             if (op == '*') {
                 j++;
-                // closure: new branch+accept
+                // closure: new branch b, accept e
                 int b = state++;
                 int e = state++;
                 setstate(b, ' ', f.start, e);
-                setstate(e, ' ', f.start, e);
+                setstate(f.end, ' ', f.start, e);
+                setstate(e, ' ', -1, -1);
                 f = new Frag(b, e);
             }
             else if (op == '+') {
                 j++;
-                // plus = one occurrence (f) then closure
-                // build closure on f:
-                int b = state++;
+                // plus = one occurrence then zero-or-more
+                // patch f.end → loop back & fall through to new accept
                 int e = state++;
-                setstate(b, ' ', f.start, e);
-                setstate(e, ' ', f.start, e);
-                // patch original end → loop
                 setstate(f.end, ' ', f.start, e);
+                setstate(e, ' ', -1, -1);
                 f = new Frag(f.start, e);
             }
             else if (op == '?') {
                 j++;
-                // zero-or-one
+                // zero-or-one: branch b to f.start or e
                 int b = state++;
                 int e = state++;
                 setstate(b, ' ', f.start, e);
-                setstate(e, ' ', e, e);
+                setstate(e, ' ', -1, -1);
                 f = new Frag(b, e);
             }
             else break;
@@ -150,7 +150,7 @@ public class Compiler {
             int s = state++;
             int e = state++;
             setstate(s, '.', e, e);
-            setstate(e, ' ', e, e);
+            setstate(e, ' ', -1, -1);
             return new Frag(s, e);
         }
         // escape
@@ -161,7 +161,7 @@ public class Compiler {
             int s = state++;
             int e = state++;
             setstate(s, lit, e, e);
-            setstate(e, ' ', e, e);
+            setstate(e, ' ', -1, -1);
             return new Frag(s, e);
         }
         // literal
@@ -169,14 +169,14 @@ public class Compiler {
             int s = state++;
             int e = state++;
             setstate(s, c, e, e);
-            setstate(e, ' ', e, e);
+            setstate(e, ' ', -1, -1);
             return new Frag(s, e);
         }
     }
 
     /** Helper: which chars can start an atom? */
     private static boolean canStartAtom(char c) {
-        return c == '(' || c == '.' || c == '\\' || (c != ')' && c != '|' 
-               && c != '*' && c != '+' && c != '?');
+        return c == '(' || c == '.' || c == '\\'
+            || (c != '|' && c != ')' && c != '*' && c != '+' && c != '?');
     }
 }

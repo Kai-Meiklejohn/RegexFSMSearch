@@ -3,7 +3,7 @@ package compile;
 /**
  * REcompile.java
  * Author: Kai Meiklejohn (1632448)
- *
+ * 
  * Entry point: read one regexp, build FSM, print it.
  */
 public class REcompile {
@@ -16,7 +16,7 @@ public class REcompile {
         // 1) initialise parser/compiler
         Compiler.init(args[0]);
 
-        // 2) parse & compile whole regexp → returns (start,end) pair
+        // 2) parse & compile whole regexp → returns (start,end) of NFA
         Compiler.Frag machine = Compiler.expression();
 
         // 3) wrap with state 0 branching to real start
