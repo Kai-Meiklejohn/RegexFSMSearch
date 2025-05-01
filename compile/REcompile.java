@@ -19,10 +19,14 @@ public class REcompile {
         // 2) parse & compile whole regexp → returns (start,end) of NFA
         Compiler.Frag machine = Compiler.expression();
 
-        // 3) wrap with state 0 branching to real start
-        Compiler.setstate(0, ' ', machine.start, machine.start);
+        // 3) create explicit end state (BR, -1, -1)
+        int endState = Compiler.newEndState();
+        Compiler.patch(machine.end, endState);
 
-        // 4) emit states 0 … (nextState-1)
+        // 4) wrap with state 0 branching to real start
+        Compiler.setstate(0, ' ', machine.start, machine.start); // Branch only to start
+
+        // 5) emit states 0 … (nextState-1)
         Compiler.printFSM();
     }
 }
