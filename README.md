@@ -26,13 +26,10 @@ javac REcompile.java Compiler.java
 
 ```bash
 # Build FSM from your regexp and save to fsm.txt
-java REcompile "(a|b)*abb" > fsm.txt
-
-# View the first few states
-head -n 5 fsm.txt
+java REcompile "(a|b)*abb" 
 ```
 
-Each line of `fsm.txt` has the form:
+Each line of the stdout has the form:
 
 ```<state#>,<type>,<next1>,<next2>```
 
