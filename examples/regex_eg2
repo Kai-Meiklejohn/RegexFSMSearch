@@ -1,0 +1,13 @@
+%java REcompile "j|z" 
+0,BR,2,2
+1,j,4,4
+2,BR,1,3
+3,z,4,4
+4,BR,5,5
+5,BR,-1,-1
+
+%java REcompile "j|z" | java REsearch simple.txt
+a zebra was found by the dog . 
+the dog was loved by a jumbo fish . 
+the jumbo bird hugged the mouse . 
+a jumbo dog kissed the zebra . 

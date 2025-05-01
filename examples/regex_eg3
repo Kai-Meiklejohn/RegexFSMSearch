@@ -1,0 +1,24 @@
+%java REcompile "aardvark|zebra" 
+0,BR,9,9
+1,a,2,2
+2,a,3,3
+3,r,4,4
+4,d,5,5
+5,v,6,6
+6,a,7,7
+7,r,8,8
+8,k,15,15
+9,BR,1,10
+10,z,11,11
+11,e,12,12
+12,b,13,13
+13,r,14,14
+14,a,15,15
+15,BR,16,16
+16,BR,-1,-1
+
+%java REcompile "aardvark|zebra" | java REsearch simple.txt
+an aardvark was cheated by the fish . 
+a zebra was found by the dog . 
+the fish was cheated by an aardvark . 
+a jumbo dog kissed the zebra . 
