@@ -4,74 +4,88 @@ import java.util.*;
 
 /**
  * Compiler.java
- * Handles parsing and compiling regexps into FSMs.
+ * Author: Kai Meiklejohn (1632448)
+ * 
+ * handles parsing and compiling regexps into FSMs.
  */
 public class Compiler {
-    // Max number of states (arbitrary, can be increased)
-    static final int MAX = 256;
-    // FSM state arrays
-    static String[] type = new String[MAX]; // "BR", "WC", or literal
-    static int[] next1 = new int[MAX];
-    static int[] next2 = new int[MAX];
-    static int nextState = 1; // 0 is reserved for the initial branch
+    // fsm representation using ArrayLists for dynamic sizing
+    static List<String> type = new ArrayList<>(); // "BR", "WC", or literal
+    static List<Integer> next1 = new ArrayList<>();
+    static List<Integer> next2 = new ArrayList<>();
+    static int nextState = 1; // start allocating from state 1 (state 0 is special)
 
-    // Input regexp and position
+    // input regexp and position
     static String re;
     static int pos;
 
-    // Fragment class for NFA fragments
+    // fragment class for NFA fragments
     public static class Frag {
         public int start;
         public int end;
         public Frag(int s, int e) { start = s; end = e; }
     }
 
-    // Initialize parser/compiler
+    // initialize parser/compiler
     public static void init(String regexp) {
         re = regexp;
         pos = 0;
-        nextState = 1;
-        Arrays.fill(type, null);
-        Arrays.fill(next1, -1);
-        Arrays.fill(next2, -1);
+        nextState = 1; // reset state counter
+        // clear and prepare lists for a new compilation
+        type.clear();
+        next1.clear();
+        next2.clear();
+        // pre-allocate state 0 (will be set by REcompile)
+        type.add(null);
+        next1.add(-1);
+        next2.add(-1);
     }
 
-    // Print FSM in required format
+    // print FSM in required format
     public static void printFSM() {
+        // iterate up to the current number of states created
         for (int i = 0; i < nextState; i++) {
-            System.out.printf("%d,%s,%d,%d\n", i, type[i], next1[i], next2[i]);
+            // handle potential null state 0 before it's set
+            String t = type.get(i) == null ? "NULL" : type.get(i);
+            System.out.printf("%d,%s,%d,%d\n", i, t, next1.get(i), next2.get(i));
         }
     }
 
-    // Set a state
+    // set a state
     public static void setstate(int s, String t, int n1, int n2) {
-        type[s] = t;
-        next1[s] = n1;
-        next2[s] = n2;
+        // ensure list capacity if needed (should be handled by newState)
+        while (s >= type.size()) {
+             type.add(null);
+             next1.add(-1);
+             next2.add(-1);
+        }
+        type.set(s, t);
+        next1.set(s, n1);
+        next2.set(s, n2);
     }
 
-    // Overload for char type
+    // overload for char type
     public static void setstate(int s, char t, int n1, int n2) {
         if (t == ' ') setstate(s, "BR", n1, n2);
         else if (t == '.') setstate(s, "WC", n1, n2);
         else setstate(s, String.valueOf(t), n1, n2);
     }
 
-    // Parse and compile the whole regexp
+    // parse and compile the whole regexp
     public static Frag expression() {
         Frag left = term();
         while (peek() == '|') {
             eat('|');
-            // Create the branch state *after* the left term, *before* the right term
-            int s = newState("BR", left.start, -1); // Placeholder for right term start
+            // create the branch state *after* the left term, *before* the right term
+            int s = newState("BR", left.start, -1); // placeholder for right term start
             Frag right = term();
-            next2[s] = right.start; // Set the second branch target
+            next2.set(s, right.start); // use set for existing state
 
-            // Create a common end state for the alternation
+            // create a common end state for the alternation
             int e = newState("BR", -1, -1);
-            patch(left.end, e); // Patch end of left fragment to the new end state
-            patch(right.end, e); // Patch end of right fragment to the new end state
-            left = new Frag(s, e); // Resulting fragment uses the branch as start, new state as end
+            patch(left.end, e); // patch end of left fragment to the new end state
+            patch(right.end, e); // patch end of right fragment to the new end state
+            left = new Frag(s, e); // resulting fragment uses the branch as start, new state as end
         }
         return left;
     }
@@ -89,8 +103,10 @@ public class Compiler {
             }
         }
         if (left == null) {
-            // Should not happen for valid regexps
+            // handle empty term (e.g., empty parens or start/end of input)
+            // create a NOP state (BR to itself, effectively)
             int s = newState("BR", -1, -1);
+            patch(s, s); // point NOP to itself
             return new Frag(s, s);
         }
         return left;
@@ -103,21 +119,26 @@ public class Compiler {
             char c = peek();
             if (c == '*') {
                 eat('*');
-                int s = newState("BR", f.start, -1);
-                patch(f.end, s);
-                f = new Frag(s, s);
+                int s = newState("BR", f.start, -1); // branch to start of f, or skip
+                patch(f.end, s); // loop back from end of f to branch
+                patch(s, -1, false); // placeholder for skipping (will be patched later)
+                f = new Frag(s, s); // new fragment is just the branch state
             } else if (c == '+') {
                 eat('+');
-                int s = newState("BR", f.start, -1);
-                patch(f.end, s);
+                // f+ is equivalent to ff*
+                int s = newState("BR", f.start, -1); // branch for the loop (*) part
+                patch(f.end, s); // loop back
+                patch(s, -1, false); // placeholder for exiting loop
+                // the fragment starts at f.start, ends at the branch s
                 f = new Frag(f.start, s);
             } else if (c == '?') {
                 eat('?');
-                int s = newState("BR", f.start, -1);
+                int s = newState("BR", f.start, -1); // branch to start of f, or skip
+                // need an end state for the optional part
                 int e = newState("BR", -1, -1);
-                patch(f.end, e);
-                patch(s, e, false); // patch only the branch
-                f = new Frag(s, e);
+                patch(f.end, e); // end of f goes to the new end state
+                patch(s, e, false); // skipping the branch also goes to the new end state
+                f = new Frag(s, e); // new fragment starts at branch, ends at new end state
             } else {
                 break;
             }
@@ -140,6 +161,7 @@ public class Compiler {
         } else if (c == '\\') {
             eat('\\');
             char lit = next();
+            if (lit == 0) throw new RuntimeException("Invalid escape sequence at end of input");
             int s = newState(String.valueOf(lit), -1, -1);
             return new Frag(s, s);
         } else if (c != 0 && !isSpecial(c)) {
@@ -147,62 +169,72 @@ public class Compiler {
             int s = newState(String.valueOf(c), -1, -1);
             return new Frag(s, s);
         } else {
-            // Should not happen for valid regexps
-            int s = newState("BR", -1, -1);
-            return new Frag(s, s);
+            // this case should ideally not be reached with valid regex
+            // if it is (e.g., empty group () ), return a NOP fragment
+             int s = newState("BR", -1, -1);
+             patch(s, s);
+             return new Frag(s, s);
         }
     }
 
-    // Utility: create a new state
+    // utility: create a new state
     private static int newState(String t, int n1, int n2) {
-        int s = nextState++;
-        setstate(s, t, n1, n2);
+        int s = nextState++; // get current next available state index and increment
+        // add the new state's data to the lists
+        type.add(t);
+        next1.add(n1);
+        next2.add(n2);
         return s;
     }
 
-    // Utility: create a new end state (BR, -1, -1)
+    // utility: create a new end state (BR, -1, -1)
     public static int newEndState() {
         return newState("BR", -1, -1);
     }
 
-    // Patch the end state(s) of a fragment to point to target
+    // patch the end state(s) of a fragment to point to target
     public static void patch(int s, int target) {
-        if (s == -1) return; // Avoid patching null states
+        if (s == -1) return; // avoid patching null states
 
-        if (type[s] != null && type[s].equals("BR")) {
-            // For BR states, patch any dangling (-1) transitions.
-            // This ensures that states like the end of an alternation (which is BR)
-            // correctly point to the final machine end state with both transitions.
-            if (next1[s] == -1) {
-                next1[s] = target;
+        if (type.get(s) != null && type.get(s).equals("BR")) {
+            // for BR states, patch *all* dangling (-1) transitions to the target.
+            boolean patched = false;
+            if (next1.get(s) == -1) {
+                next1.set(s, target);
+                patched = true;
             }
-            if (next2[s] == -1) {
-                next2[s] = target;
+            if (next2.get(s) == -1) {
+                next2.set(s, target);
+                patched = true;
             }
-        } else { // Literal or WC state
-            // Non-BR states have a single logical exit transition.
-            next1[s] = target;
-            next2[s] = target;
+        } else { // literal or WC state
+            next1.set(s, target);
+            next2.set(s, target);
         }
     }
 
-    // Patch only the branch (for ? operator)
+    // patch only the branch (for ? operator)
     private static void patch(int s, int target, boolean both) {
-        if (type[s] != null && type[s].equals("BR")) {
+         if (s == -1) return; // avoid patching null states
+        if (type.get(s) != null && type.get(s).equals("BR")) {
             if (both) {
-                next1[s] = target;
-                next2[s] = target;
+                // this case might not be needed if 'both' is only used for non-BR
+                if (next1.get(s) == -1) next1.set(s, target);
+                if (next2.get(s) == -1) next2.set(s, target);
             } else {
-                if (next2[s] == -1) next2[s] = target;
-                else next1[s] = target;
+                // prefer patching next2 first for optional path (skip path)
+                if (next2.get(s) == -1) next2.set(s, target);
+                else if (next1.get(s) == -1) next1.set(s, target); // fallback if next2 was already patched
             }
         } else {
-            next1[s] = target;
-            next2[s] = target;
+            // patching a non-BR state for ? doesn't make sense in Thompson's construction
+            // if called, update both transitions.
+            next1.set(s, target);
+            next2.set(s, target);
         }
     }
 
-    // Parsing helpers
+    // parsing helpers
     private static char peek() {
         if (pos >= re.length()) return (char)0;
         return re.charAt(pos);
@@ -213,7 +245,7 @@ public class Compiler {
     }
     private static void eat(char c) {
         if (peek() == c) pos++;
-        else throw new RuntimeException("Expected '" + c + "' at pos " + pos);
+        else throw new RuntimeException("Expected '" + c + "' at pos " + pos + ", found '" + peek() + "'");
     }
     private static boolean isSpecial(char c) {
         return c == '(' || c == ')' || c == '*' || c == '+' || c == '?' || c == '|' || c == '.' || c == '\\';
