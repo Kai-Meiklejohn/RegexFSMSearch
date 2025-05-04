@@ -8,40 +8,157 @@ import java.io.*;
 import java.util.*;
 
 public class REsearch {
+    // variables to hold FSM data
+    private static char[] ch;
+    private static int[] next1;
+    private static int[] next2;
+    private static final int SCAN = -2;
+
     public static void main(String[] args) {
-        // checking correct amount of arguments are parsed
-        if (args.length != 1) {
+        // Check for correct number of arguments
+         if (args.length != 1) {
+            // Print usage message and exit
             System.err.println("Usage: java search.REsearch <filename>");
             System.exit(1);
         }
-        //storing file name from argument
+        //store file name from argument
         String filename = args[0];
 
-        //reading the fsm from standard input
+        // Read FSM from standard input
         Scanner fsmInput = new Scanner(System.in);
         List<String> fsmLines = new ArrayList<>();
-
-        //storing all lines from the fsm input
+        // Read lines from standard input until file has ended
         while (fsmInput.hasNextLine()) {
-            fsmLines.add(fsmInput.nextLine());
+            String line = fsmInput.nextLine();
+            //store each line in the list
+            fsmLines.add(line);
         }
-
         fsmInput.close();
 
+        //parsing fsm to find max state number
+        int maxState = -1;
+        for (String line : fsmLines) {
+            //split the line by commas and parse the state number
+            String[] parts = line.split(",");
+            int stateNum = Integer.parseInt(parts[0]);
+            if (stateNum > maxState) {
+                //update maxState to largest state number found
+                maxState = stateNum;
+            }
+        }
+        //initialise arrays with size maxState + 1
+        ch = new char[maxState + 1];
+        next1 = new int[maxState + 1];
+        next2 = new int[maxState + 1];
+        for (String line : fsmLines) {
+            String[] parts = line.split(",");
+            int stateNum = Integer.parseInt(parts[0]);
+            if (parts[1].equals("BR")) {
+                //set BR state indicator
+                ch[stateNum] = '\0';
+            } else {
+                //set character for non BR state
+                ch[stateNum] = parts[1].charAt(0);
+            }
+            //setting first and second next states
+            next1[stateNum] = Integer.parseInt(parts[2]);
+            next2[stateNum] = Integer.parseInt(parts[3]);
+        }
 
-        //opening the file to search
+        //search through the file for matches using fsm
         try (BufferedReader fileReader = new BufferedReader(new FileReader(filename))) {
-            //variable to store each line of the file
             String line;
-
             while ((line = fileReader.readLine()) != null) {
-                //do real searching not this
-                System.out.println(line);
+                if (searchLine(line)) {
+                    System.out.println(line);
+                }
             }
         } catch (IOException e) {
-            // handle file errors
+            //handle file reading errors
             System.err.println("Error reading file: " + e.getMessage());
             System.exit(1);
+        }
+    }
+
+    //method to search through each line of the file using the fsm
+    private static boolean searchLine(String line) {
+        // variables to hold current and next states
+        Dequeue current = new Dequeue();
+        Dequeue next = new Dequeue();
+        current.addBack(0); 
+
+        //loop through each character in the line
+        for (int i = 0; i < line.length(); i++) {
+            //get the current character
+            char c = line.charAt(i);
+            //mark state as visited
+            Set<Integer> visited = new HashSet<>();
+
+            while (!current.isEmpty()) {
+                //get the next state from the current queue
+                int state = current.removeFront();
+                //check if state is already visited
+                if (visited.contains(state)) continue;
+                //mark state as visited
+                visited.add(state);
+
+                if (next1[state] == -1 && next2[state] == -1) {
+                    //return true if accepting state is reached
+                    return true; 
+                }
+
+                //handle branching states
+                if (ch[state] == '\0') { 
+                    //add first branch
+                    if (next1[state] != -1) current.addBack(next1[state]);
+                    //add second branch
+                    if (next2[state] != -1) current.addBack(next2[state]);
+                    //handle character match
+                } else if (ch[state] == c) {
+                    //add next state
+                    if (next1[state] != -1) next.addBack(next1[state]);
+                }
+            }
+
+            //move to next character by switching queues and allowing new matches
+            current = next;
+            //move next states to current
+            next = new Dequeue();
+            //add start state for new match possibility
+            current.addBack(0);
+        }
+
+        //check remaining states for accepting state after line end
+        while (!current.isEmpty()) {
+            int state = current.removeFront();
+            if (next1[state] == -1 && next2[state] == -1) {
+                //return true is accepting state is found
+                return true;
+            }
+        }
+        //return false if no matching state is found
+        return false;
+    }
+
+    // Dequeue class to manage the states during the search
+    public static class Dequeue {
+        // variable to hold the queue of states
+        private LinkedList<Integer> list = new LinkedList<>();
+        //method to add a state to the front of the queue
+        public void addFront(int state) {
+            list.addFirst(state);
+        }
+        //method to add a state to the back of the queue
+        public void addBack(int state) {
+            list.addLast(state);
+        }
+        //method to remove a state from the front of the queue
+        public int removeFront() {
+            return list.removeFirst();
+        }
+        //method to check if queue is empty
+        public boolean isEmpty() {
+            return list.isEmpty();
         }
     }
 }
