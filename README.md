@@ -197,12 +197,13 @@ main():
 | `.`         | Yes    | wildcard                      |
 | `ab*`       | Yes    | concatenation + closure       |
 | `(a|b)+c?`  | Yes    | alternation, closure, optional|
-| `\*a\?`    | Yes    | literals `*` and `?` escaped  |
-| `a**`       | Yes    | collapsed to `a*`             |
+| `\*a\?`     | Yes    | literals `*` and `?` escaped  |
 | `a+b`       | Yes    | alternation                   |
+| `a*`        | No     | can't have more than one `*`  |
 | `a++`       | No     | double `+` is invalid         |
 | `(`         | No     | unmatched parenthesis         |
-| `a(b`       | No     | missing `)`                  |
+| `a(b`       | No     | missing `)`                   |
+| `a)b`       | No     | missing `(`                   |
 | `*a`        | No     | `*` without preceding base    |
 | `a\`        | No     | trailing backslash            |
 

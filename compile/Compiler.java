@@ -114,16 +114,25 @@ public class Compiler {
 
     // factor: base + closure/option
     private static Frag factor() {
-        Frag f = base();
+        Frag f = null;
         while (true) {
             char c = peek();
             if (c == '*') {
+                if (f == null) {
+                    throw new RuntimeException("Invalid syntax: '*' cannot appear without a preceding base");
+                }
                 eat('*');
+                if (peek() == '*') {
+                    throw new RuntimeException("Invalid syntax: multiple consecutive '*' operators are not allowed");
+                }
                 int s = newState("BR", f.start, -1); // branch to start of f, or skip
                 patch(f.end, s); // loop back from end of f to branch
                 patch(s, -1, false); // placeholder for skipping (will be patched later)
                 f = new Frag(s, s); // new fragment is just the branch state
             } else if (c == '+') {
+                if (f == null) {
+                    throw new RuntimeException("Invalid syntax: '+' cannot appear without a preceding base");
+                }
                 eat('+');
                 // f+ is equivalent to ff*
                 int s = newState("BR", f.start, -1); // branch for the loop (*) part
@@ -132,6 +141,9 @@ public class Compiler {
                 // the fragment starts at f.start, ends at the branch s
                 f = new Frag(f.start, s);
             } else if (c == '?') {
+                if (f == null) {
+                    throw new RuntimeException("Invalid syntax: '?' cannot appear without a preceding base");
+                }
                 eat('?');
                 int s = newState("BR", f.start, -1); // branch to start of f, or skip
                 // need an end state for the optional part
@@ -140,7 +152,11 @@ public class Compiler {
                 patch(s, e, false); // skipping the branch also goes to the new end state
                 f = new Frag(s, e); // new fragment starts at branch, ends at new end state
             } else {
-                break;
+                if (f == null) {
+                    f = base();
+                } else {
+                    break;
+                }
             }
         }
         return f;
