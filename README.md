@@ -237,4 +237,201 @@ main():
 
 ## Search
 
-*(To be completed by Riley Cooney)*
+### Overview
+
+This part of the project implements the **pattern searcher**, which reads an FSM from standard input (such as one produced by `REcompile`) and scans a text file line-by-line. It prints each line that contains a substring **recognised by the FSM**.
+
+### Files
+
+- `REsearch.java`: The searcher program.
+
+---
+
+### Compiling
+
+```bash
+cd RegexFSMSearch
+javac -d . search/REsearch.java
+```
+### Running
+
+#### from file
+
+```bash
+Get-Content fsm.txt | java -cp . search.REsearch simple.txt
+```
+
+#### from pipe
+
+```bash
+java compile.REcompile | java -cp . search.REsearch simple.txt
+```
+
+### What it does
+
+Reads FSM from standard input and loads each state into arrays ch, next1, and next2.
+
+Parses input file line by line.
+
+For each line:
+
+Runs an NFA-style simulation (using a custom deque) from every character position.
+
+Follows all possible epsilon-transitions (BR) and literal matches.
+
+If an accepting state (where both next1 and next2 are -1) is reached, prints the line once.
+
+## Pseudocode
+
+```bash
+main(args):
+    if args.length != 1:
+        print error and exit
+
+    filename = args[0]
+    fsmLines = read from stdin
+
+    maxState = find highest state number
+    init ch[], next1[], next2[] arrays
+
+    for each line in fsmLines:
+        parse and populate state arrays
+
+    for each line in input file:
+        if searchLine(line):
+            print line
+
+searchLine(line):
+    for each character position in line:
+        current = {0}
+        while current has states:
+            if accepting state in current:
+                return true
+            match current states with current char
+            move to next states
+        add state 0 again for next starting position
+    return false
+```
+
+### Example
+
+given this FSM (fsm.txt)
+
+```bash
+0,BR,9,9
+1,a,2,2
+2,a,3,3
+3,r,4,4
+4,d,5,5
+5,v,6,6
+6,a,7,7
+7,r,8,8
+8,k,15,15
+9,BR,1,10
+10,z,11,11
+11,e,12,12
+12,b,13,13
+13,r,14,14
+14,a,15,15
+15,BR,16,16
+16,BR,-1,-1
+```
+
+and this input file (simple.txt)
+
+```bash
+the cat chased a fish . 
+the bird was found by the fish . 
+the fish found a bird . 
+an aardvark was cheated by the fish . 
+the mouse was hugged by the cat . 
+a cat found the fish . 
+a cat cheated a dog . 
+a zebra was found by the dog . 
+the fish may cheat the king . 
+the dog was loved by a jumbo fish . 
+the bird cheats the fish . 
+the gold was panned by the king . 
+the cat found the wish . 
+the cat was cheated by the dog . 
+the fish was cooked in a pan . 
+a cat loved the bird . 
+the dish was found by the cat . 
+the bird was chased by a cat . 
+the cat cheated the mouse . 
+a fish cheated a dog . 
+the mouse was found by the dog . 
+the jumbo bird hugged the mouse . 
+the fish chased the dog . 
+the cat or bird was cheated by the dog . 
+the dog was kissed by the bird . 
+a cat was found by the dog . 
+the fish was cheated by an aardvark . 
+a bird cheated the fish . 
+the fish found a mouse . 
+the bird chased a bird . 
+a mouse was chased by the cat . 
+the bird was chased by the bird . 
+the dog found the bird . 
+the cat was chased by the cat . 
+the dog was found by the fish . 
+the fish loved the dog . 
+the fish kissed a mouse . 
+the bird was kissed by the fish . 
+the cat was cheated by the mouse . 
+a cat cheated the mouse . 
+a bird was loved by the dog . 
+a fish found the mouse . 
+a kingfisher will chase a fish . 
+a ruler loved the king . 
+the kingdom was ruled by a bird . 
+the mouse hugged a cat . 
+the bird kissed a cat . 
+a mouse hugged the dog . 
+the fish was panned by a dog . 
+a bird kissed the cat . 
+the dog will chase a bird . 
+the fish was cheated by a fish . 
+the cat kissed a fish . 
+a bird was chased by a bird . 
+the mouse was loved by the bird . 
+the mouse found the house . 
+a bird was kissed by a fish . 
+the bird was kissed by the mouse . 
+the dog was cheated by a cat . 
+a cat loved the mouse . 
+the dog was kissed by the dog . 
+the cat was hugged by the bird . 
+the fish hugged the fish . 
+a dog was found by a cat . 
+the dog was found by the moose . 
+the mouse hugged the dog . 
+the bird loved a cat . 
+a bird was chased by a fish . 
+the cat cheated a dog . 
+a bird cheated the cat . 
+the bird was hugged by a cat . 
+the cat hugged a dog . 
+a cat was hugged by the bird . 
+the fish chased the mouse . 
+the kiss chased the dog . 
+the fish loved the cat . 
+a bird kissed the mouse . 
+a jumbo dog kissed the zebra . 
+```
+
+Output:
+```bash
+an aardvark was cheated by the fish . 
+a zebra was found by the dog . 
+the fish was cheated by an aardvark .
+a jumbo dog kissed the zebra .
+```
+
+### Notes
+
+- The **accept state** is defined as any state where both `next1` and `next2` are `-1`.
+- You can test without a working `REcompile` by hand-writing an FSM file.
+- The NFA simulation uses a custom `Dequeue` structure and supports:
+  - **epsilon transitions** (`BR`)
+  - **literal character matches** (`a`, `b`, etc.)
