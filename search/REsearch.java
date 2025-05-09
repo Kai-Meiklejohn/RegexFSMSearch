@@ -142,23 +142,60 @@ public class REsearch {
 
     // Dequeue class to manage the states during the search
     public static class Dequeue {
-        // variable to hold the queue of states
-        private LinkedList<Integer> list = new LinkedList<>();
+        // Node class for a double linked list
+        private static class Node {
+            int state;
+            Node prev, next;
+            Node(int state) { this.state = state; }
+        }
+        // variables to hold the head and tail of the queue
+        private Node head;
+        private Node tail;
+        private int size = 0;
+
         //method to add a state to the front of the queue
         public void addFront(int state) {
-            list.addFirst(state);
+            Node node = new Node(state);
+            if (head == null) {
+                head = tail = node;
+            } else {
+                node.next = head;
+                head.prev = node;
+                head = node;
+            }
+            size++;
         }
+
         //method to add a state to the back of the queue
         public void addBack(int state) {
-            list.addLast(state);
+            Node node = new Node(state);
+            if (tail == null) {
+                head = tail = node;
+            } else {
+                tail.next = node;
+                node.prev = tail;
+                tail = node;
+            }
+            size++;
         }
+
         //method to remove a state from the front of the queue
         public int removeFront() {
-            return list.removeFirst();
+            if (head == null) throw new NoSuchElementException();
+            int val = head.state;
+            head = head.next;
+            if (head != null) {
+                head.prev = null;
+            } else {
+                tail = null;
+            }
+            size--;
+            return val;
         }
+
         //method to check if queue is empty
         public boolean isEmpty() {
-            return list.isEmpty();
+            return size == 0;
         }
     }
 }
