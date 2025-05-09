@@ -171,8 +171,8 @@ base():
         eat('.')
         s = addState('WC', -1, -1)
         return Frag(s, s)
-    else if peek() == '\\':
-        eat('\\')
+    else if peek() == '\':
+        eat('\')
         lit = eat()
         s = addState(lit, -1, -1)
         return Frag(s, s)
@@ -226,7 +226,7 @@ main():
 
 | Precedence | Operators            | Description                                      |
 |------------|----------------------|--------------------------------------------------|
-| 1          | Escaped (`\\x`)       | Makes `x` a literal, even if it’s normally special |
+| 1          | Escaped (`\x`)       | Makes `x` a literal, even if it’s normally special |
 | 2          | Grouping (`(` `)`)   | Controls order of evaluation                     |
 | 3          | Repetition (`*`, `+`, `?`) | Apply to the immediately preceding item       |
 | 4          | Concatenation        | Juxtaposition (e.g. `ab` means `a` then `b`)     |
