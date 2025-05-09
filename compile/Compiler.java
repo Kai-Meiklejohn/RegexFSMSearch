@@ -115,6 +115,7 @@ public class Compiler {
     // factor: base + closure/option
     private static Frag factor() {
         Frag f = null;
+        boolean lastWasSpecial = false; // Track if the last character was a special character
         while (true) {
             char c = peek();
             if (c == '*') {
@@ -129,34 +130,44 @@ public class Compiler {
                 patch(f.end, s); // loop back from end of f to branch
                 patch(s, -1, false); // placeholder for skipping (will be patched later)
                 f = new Frag(s, s); // new fragment is just the branch state
+                lastWasSpecial = true;
             } else if (c == '+') {
                 if (f == null) {
                     throw new RuntimeException("Invalid syntax: '+' cannot appear without a preceding base");
                 }
                 eat('+');
+                if (lastWasSpecial) {
+                    throw new RuntimeException("Invalid syntax: consecutive special characters are not allowed");
+                }
                 // f+ is equivalent to ff*
                 int s = newState("BR", f.start, -1); // branch for the loop (*) part
                 patch(f.end, s); // loop back
                 patch(s, -1, false); // placeholder for exiting loop
                 // the fragment starts at f.start, ends at the branch s
                 f = new Frag(f.start, s);
+                lastWasSpecial = true;
             } else if (c == '?') {
                 if (f == null) {
                     throw new RuntimeException("Invalid syntax: '?' cannot appear without a preceding base");
                 }
                 eat('?');
+                if (lastWasSpecial) {
+                    throw new RuntimeException("Invalid syntax: consecutive special characters are not allowed");
+                }
                 int s = newState("BR", f.start, -1); // branch to start of f, or skip
                 // need an end state for the optional part
                 int e = newState("BR", -1, -1);
                 patch(f.end, e); // end of f goes to the new end state
                 patch(s, e, false); // skipping the branch also goes to the new end state
                 f = new Frag(s, e); // new fragment starts at branch, ends at new end state
+                lastWasSpecial = true;
             } else {
                 if (f == null) {
                     f = base();
                 } else {
                     break;
                 }
+                lastWasSpecial = false; // Reset the flag for non-special characters
             }
         }
         return f;
@@ -167,6 +178,9 @@ public class Compiler {
         char c = peek();
         if (c == '(') {
             eat('(');
+            if (peek() == ')') {
+                throw new RuntimeException("Invalid syntax: Brackets cannot be empty. Something must be inside brackets.");
+            }
             Frag f = expression();
             eat(')');
             return f;
