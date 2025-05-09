@@ -19,6 +19,9 @@ public class Compiler {
     static String re;
     static int pos;
 
+    // Track unmatched '('
+    static int parenCount;
+
     // fragment class for NFA fragments
     public static class Frag {
         public int start;
@@ -31,6 +34,7 @@ public class Compiler {
         re = regexp;
         pos = 0;
         nextState = 1; // reset state counter
+        parenCount = 0; // reset counter
         // clear and prepare lists for a new compilation
         type.clear();
         next1.clear();
@@ -177,12 +181,14 @@ public class Compiler {
     private static Frag base() {
         char c = peek();
         if (c == '(') {
+            parenCount++; // saw an '(', increment
             eat('(');
             if (peek() == ')') {
                 throw new RuntimeException("Invalid syntax: Brackets cannot be empty. Something must be inside brackets.");
             }
             Frag f = expression();
             eat(')');
+            parenCount--; // matched one ')', decrement
             return f;
         } else if (c == '.') {
             eat('.');
