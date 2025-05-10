@@ -264,7 +264,7 @@ Get-Content fsm.txt | java -cp . search.REsearch simple.txt
 #### from pipe
 
 ```bash
-java compile.REcompile | java -cp . search.REsearch simple.txt
+java compile.REcompile "(a|b)*abb" | java search.REsearch simple.txt
 ```
 
 ### What it does
