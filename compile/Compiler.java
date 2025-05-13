@@ -77,12 +77,32 @@ public class Compiler {
 
     // parse and compile the whole regexp
     public static Frag expression() {
+        if (re == null || re.length() == 0) {
+            throw new RuntimeException("Invalid syntax: Regular expression cannot be empty.");
+        }
+        // Disallow regex starting with '|'
+        if (peek() == '|') {
+            throw new RuntimeException("Invalid syntax: '|' cannot be at the start of a regexp.");
+        }
         Frag left = term();
+        boolean sawAlternation = false;
         while (peek() == '|') {
+            sawAlternation = true;
             eat('|');
-            // create the branch state *after* the left term, *before* the right term
+            // Check for missing right side
+            if (endOfTerm()) {
+                throw new RuntimeException("Invalid syntax: '|' must have a regexp on both sides.");
+            }
+            // Check for missing left side (NOP fragment means empty)
+            if (left == null || (left.start == left.end && type.get(left.start).equals("BR") && next1.get(left.start) == left.start && next2.get(left.start) == left.start)) {
+                throw new RuntimeException("Invalid syntax: '|' must have a regexp on both sides.");
+            }
             int s = newState("BR", left.start, -1); // placeholder for right term start
             Frag right = term();
+            // Check for missing right side (NOP fragment means empty)
+            if (right == null || (right.start == right.end && type.get(right.start).equals("BR") && next1.get(right.start) == right.start && next2.get(right.start) == right.start)) {
+                throw new RuntimeException("Invalid syntax: '|' must have a regexp on both sides.");
+            }
             next2.set(s, right.start); // use set for existing state
 
             // create a common end state for the alternation
@@ -90,6 +110,10 @@ public class Compiler {
             patch(left.end, e); // patch end of left fragment to the new end state
             patch(right.end, e); // patch end of right fragment to the new end state
             left = new Frag(s, e); // resulting fragment uses the branch as start, new state as end
+        }
+        // If the only thing in the expression was '|', error
+        if (sawAlternation && (left == null || (left.start == left.end && type.get(left.start).equals("BR") && next1.get(left.start) == left.start && next2.get(left.start) == left.start))) {
+            throw new RuntimeException("Invalid syntax: '|' must have a regexp on both sides.");
         }
         return left;
     }
@@ -234,14 +258,11 @@ public class Compiler {
 
         if (type.get(s) != null && type.get(s).equals("BR")) {
             // for BR states, patch *all* dangling (-1) transitions to the target.
-            boolean patched = false;
             if (next1.get(s) == -1) {
                 next1.set(s, target);
-                patched = true;
             }
             if (next2.get(s) == -1) {
                 next2.set(s, target);
-                patched = true;
             }
         } else { // literal or WC state
             next1.set(s, target);

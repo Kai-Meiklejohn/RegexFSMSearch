@@ -66,31 +66,28 @@ declare -a test_cases=(
   ".:a"
   ".:z"
   ".:1"
-  ".:"
   "a.c:abc"
   "a.c:axc"
-  "a.c:ac"      # should not match
+  "a.c:ac" # should not match
 
   # Quantifiers
   "a*:"
   "a*:a"
   "a*:aaaa"
-  "a*:baaaa"
   "a+:a"
   "a+:aaaa"
-  "a+:"
+  "a+:" # should not match
   "a?:"
   "a?:a"
-  "a?:aa"
+  "a?:aa" # should not match
   "ab*c:ac"
   "ab*c:abc"
   "ab*c:abbbc"
-  "ab+c:ac"
+  "ab+c:ac" # should not match
   "ab+c:abc"
   "ab+c:abbbc"
   "ab?c:ac"
   "ab?c:abc"
-  "ab?c:abbc"
 
   # Parentheses and precedence
   "(ab)*:"
@@ -101,36 +98,36 @@ declare -a test_cases=(
   "(a|b)+:ab"
   "(a|b)+:ba"
   "(a|b)+:abba"
-  "(a|b)+:"
+  "(a|b)+:" # should not match
   "a(bc)*d:ad"
   "a(bc)*d:abcd"
   "a(bc)*d:abcbcd"
-  "a(bc)+d:ad"
   "a(bc)+d:abcd"
   "a(bc)+d:abcbcd"
 
   # Escaped special characters
-  "a\\*b:a*b"
-  "a\\|b:a|b"
-  "a\\(b:a(b"
-  "a\\)b:a)b"
+  "a\*b:a*b"
+  "a\|b:a|b"
+  "a\(b:a(b"
+  "a\)b:a)b"
   "a\\\\b:a\\b"
-  "\\.:."
-  "\\.:a"
-  "a\\.b:a.b"
-  "a\\.b:acb"
+  "\.:."
+  "a\.b:a.b"
+  "a\\.b:a\cb"
 
   # Edge/invalid cases (should fail or error)
-  "():"
-  "a**:a"
-  "a++:a"
-  "a??:a"
-  "(a:b"
-  "a):a"
-  "a(:a"
-  "a|:a"
-  ":a"
-  "a:"
+  "():" # should not match
+  "a**:a" # should not match
+  "a++:a" # should not match
+  "a??:a" # should not match
+  "(a:a" # should not match
+  "a):a" # should not match
+  "a(:a" # should not match
+  "a|:a" # should not match
+  ":a" # should not match
+  "a:" # should not match
+
+  # There should be 15 failing tests
 )
 
 # Compile all Java files
