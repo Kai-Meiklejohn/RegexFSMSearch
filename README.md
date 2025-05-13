@@ -15,7 +15,7 @@ This program is a two-part system for working with regular expressions and searc
      cd compile
      javac compile/REcompile.java compile/Compiler.java
      cd ../search
-     javac compile/REsearch.java
+     javac search/REsearch.java
      ```
 
 2. **Run the Programs Together**:
