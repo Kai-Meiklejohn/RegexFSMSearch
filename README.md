@@ -54,8 +54,8 @@ This program is a two-part system for working with regular expressions and searc
   ```
 
 ## Team
-- **Student 1**: Kai Meiklejohn, 1632448  
-- **Student 2**: Riley Cooney, 1632444  
+- **Student 1**: Kai Meiklejohn  
+- **Student 2**: Riley Cooney  
 
 ## 
 
