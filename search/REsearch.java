@@ -61,9 +61,6 @@ public class REsearch {
             } else if (parts[1].equals("WC")) {
                 // set WC state indicator
                 ch[stateNum] = '.';
-            } else {
-                // set character for non BR state
-                ch[stateNum] = parts[1].charAt(0);
             }
             // setting first and second next states
             next1[stateNum] = Integer.parseInt(parts[2]);
@@ -118,7 +115,7 @@ public class REsearch {
                     if (next1[state] != -1) current.addBack(next1[state]);
                     // add second branch
                     if (next2[state] != -1) current.addBack(next2[state]);
-                // handle character match or wildcard match
+                // handle character match
                 } else if (ch[state] == c || ch[state] == '.') {
                     // add next state
                     if (next1[state] != -1) next.addBack(next1[state]);
