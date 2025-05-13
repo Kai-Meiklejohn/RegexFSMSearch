@@ -56,12 +56,14 @@ public class REsearch {
             String[] parts = line.split(",");
             int stateNum = Integer.parseInt(parts[0]);
             if (parts[1].equals("BR")) {
-                // set BR state indicator
                 ch[stateNum] = '\0';
             } else if (parts[1].equals("WC")) {
-                // set WC state indicator
                 ch[stateNum] = '.';
+            } else {
+                // handle literal character
+                ch[stateNum] = parts[1].charAt(0);
             }
+            
             // setting first and second next states
             next1[stateNum] = Integer.parseInt(parts[2]);
             next2[stateNum] = Integer.parseInt(parts[3]);
