@@ -13,9 +13,9 @@ This program is a two-part system for working with regular expressions and searc
    - Navigate to the respective directories and compile the Java files:
      ```bash
      cd compile
-     javac REcompile.java Compiler.java
+     javac compile/REcompile.java compile/Compiler.java
      cd ../search
-     javac REsearch.java
+     javac compile/REsearch.java
      ```
 
 2. **Run the Programs Together**:
@@ -73,8 +73,7 @@ This part of the project involves building a non-deterministic finite-state mach
 ### Compiling
 
 ```bash
-cd compile
-javac REcompile.java Compiler.java
+javac compile/REcompile.java compile/Compiler.java
 ```
 
 ### Running
