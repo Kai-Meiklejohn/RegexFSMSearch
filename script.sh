@@ -104,6 +104,10 @@ declare -a test_cases=(
   "a(bc)*d:abcbcd"
   "a(bc)+d:abcd"
   "a(bc)+d:abcbcd"
+  "aardvark|zebra:aardvark"
+  "aardvark|zebra:zebra"
+  "aardvar(k|z)ebra:aardvarkebra"
+  "aardvar(k|z)ebra:aardvarzebra"
 
   # Escaped special characters
   "a\*b:a*b"
