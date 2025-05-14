@@ -94,6 +94,12 @@ declare -a test_cases=(
   "ab*c*d:abcd"
   "ab*c*d:abbccd"
   "ab*c*d:abbbccccccd"
+  "ab+c+d:ad" # should not match
+  "ab+c+d:abd" # should not match
+  "ab+c+d:acd" # should not match
+  "ab+c+d:abcd"
+  "ab+c+d:abbccd"
+  "ab+c+d:abbbccccccd"
 
   # Parentheses and precedence
   "(ab)*: "
@@ -137,7 +143,7 @@ declare -a test_cases=(
   " :a" # should not match
   "a: " # should not match
 
-  # There should be 15 failing tests
+  # There should be 18 failing tests
 )
 
 # Compile all Java files
