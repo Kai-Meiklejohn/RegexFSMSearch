@@ -1,0 +1,121 @@
+grep -E 'a' test.txt
+02. www()aaawww
+04. wwwgabadewww
+05. wwwgaadegwww
+06. wwwabawww
+07. wwwaawww
+08. wwwabwww
+09. wwbbaawww
+10. wwwabfgawwww
+11. wwwacdeawww
+12. wwwadeawww
+13. wwwfgawww
+14. wwwacdeawww
+15. wwwabdwww
+16. wwwacdawww
+17. wwwab\dwww
+18. wwwacdwww
+21. wwwwwagggggggggggggggggawwwww
+22. wwwwagawwwwwwwwww
+23. wwwwaazwythgruobwww
+23. wwwwaazwythgruowww
+24. wwwaaaa.bbbwwww
+25. wwwwaeeddeeaggggffggawwww
+26. wwwwadeagfawwww
+27. wwwaaffawww
+grep -E 'ab' test.txt
+04. wwwgabadewww
+06. wwwabawww
+08. wwwabwww
+10. wwwabfgawwww
+15. wwwabdwww
+17. wwwab\dwww
+grep -E 'aa*b' test.txt
+04. wwwgabadewww
+06. wwwabawww
+08. wwwabwww
+10. wwwabfgawwww
+15. wwwabdwww
+17. wwwab\dwww
+grep -E 'a?b' test.txt
+03. wwwbbe\\.\?\*\)www
+04. wwwgabadewww
+06. wwwabawww
+08. wwwabwww
+09. wwbbaawww
+10. wwwabfgawwww
+15. wwwabdwww
+17. wwwab\dwww
+19. wwwwbbbwww
+23. wwwwaazwythgruobwww
+24. wwwaaaa.bbbwwww
+grep -E 'a.a' test.txt
+02. www()aaawww
+04. wwwgabadewww
+06. wwwabawww
+22. wwwwagawwwwwwwwww
+24. wwwaaaa.bbbwwww
+grep -E 'a.*b' test.txt
+04. wwwgabadewww
+06. wwwabawww
+08. wwwabwww
+10. wwwabfgawwww
+15. wwwabdwww
+17. wwwab\dwww
+23. wwwwaazwythgruobwww
+24. wwwaaaa.bbbwwww
+grep -E 'a\.b' test.txt
+24. wwwaaaa.bbbwwww
+grep -E 'a\.*b' test.txt
+04. wwwgabadewww
+06. wwwabawww
+08. wwwabwww
+10. wwwabfgawwww
+15. wwwabdwww
+17. wwwab\dwww
+24. wwwaaaa.bbbwwww
+grep -E 'ab|cd' test.txt
+01. wwwccddde.?*)www
+04. wwwgabadewww
+06. wwwabawww
+08. wwwabwww
+10. wwwabfgawwww
+11. wwwacdeawww
+14. wwwacdeawww
+15. wwwabdwww
+16. wwwacdawww
+17. wwwab\dwww
+18. wwwacdwww
+20. wwwcdwww
+grep -E 'a(b|c)d' test.txt
+11. wwwacdeawww
+14. wwwacdeawww
+15. wwwabdwww
+16. wwwacdawww
+18. wwwacdwww
+grep -E 'a(b\|c)d' test.txt
+grep -E 'a(b|c)(de|fg)a' test.txt
+10. wwwabfgawwww
+11. wwwacdeawww
+14. wwwacdeawww
+grep -E 'ab*b?a' test.txt
+02. www()aaawww
+04. wwwgabadewww
+05. wwwgaadegwww
+06. wwwabawww
+07. wwwaawww
+09. wwbbaawww
+23. wwwwaazwythgruobwww
+23. wwwwaazwythgruowww
+24. wwwaaaa.bbbwwww
+27. wwwaaffawww
+grep -E 'g(a(b|c)a)|(de)g' test.txt
+04. wwwgabadewww
+05. wwwgaadegwww
+grep -E '(bb|cc)?d*e\.\?\*\)|\(\)aa' test.txt
+01. wwwccddde.?*)www
+02. www()aaawww
+grep -E 'a(dd|ee)?a(gg|ff)*a' test.txt
+02. www()aaawww
+24. wwwaaaa.bbbwwww
+27. wwwaaffawww

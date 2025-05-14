@@ -1,0 +1,47 @@
+Here are some tests (A-P) covering most of your specification (although missing tests for one-or-more "+" operator), and some enumerated example lines of text (01-27) that you can try testing with, and I will post another two files with the sample text in one and some test runs with the equivalent results using grep.
+
+A. a
+B. ab
+C. aa*b
+D. a?b
+E. a.a
+F. a.*b
+G. a\.b
+H. a\.*b
+I. ab|cd
+J. a(b|c)d
+K. a(b\|c)d
+L. a(b|c)(de|fg)a
+M. ab*b?a
+N. g(a(b|c)a)|(de)g
+O. (bb|cc)?d*e\.\?\*\)|\(\)aa
+P. a(dd|ee)?a(gg|ff)*a
+
+01. wwwccddde.?*)www
+02. www()aaawww
+03. wwwbbe\\.\?\*\)www
+04. wwwgabadewww
+05. wwwgaadegwww
+06. wwwabawww
+07. wwwaawww
+08. wwwabwww
+09. wwbbaawww
+10. wwwabfgawwww
+11. wwwacdeawww
+12. wwwadeawww
+13. wwwfgawww
+14. wwwacdeawww
+15. wwwabdwww
+16. wwwacdawww
+17. wwwab\dwww
+18. wwwacdwww
+19. wwwwbbbwww
+20. wwwcdwww
+21. wwwwwagggggggggggggggggawwwww
+22. wwwwagawwwwwwwwww
+23. wwwwaazwythgruobwww
+23. wwwwaazwythgruowww
+24. wwwaaaa.bbbwwww
+25. wwwwaeeddeeaggggffggawwww
+26. wwwwadeagfawwww
+27. wwwaaffawww
