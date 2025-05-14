@@ -88,6 +88,12 @@ declare -a test_cases=(
   "ab+c:abbbc"
   "ab?c:ac"
   "ab?c:abc"
+  "ab*c*d:ad"
+  "ab*c*d:abd"
+  "ab*c*d:acd"
+  "ab*c*d:abcd"
+  "ab*c*d:abbccd"
+  "ab*c*d:abbbccccccd"
 
   # Parentheses and precedence
   "(ab)*: "
