@@ -14,11 +14,12 @@ public class REsearch {
     private static char[] ch;
     private static int[] next1;
     private static int[] next2;
+    private static boolean[] isWildcard;  // Added to distinguish wildcards from literal periods
     private static final int SCAN = -2;
 
     public static void main(String[] args) {
         // Check for correct number of arguments
-         if (args.length != 1) {
+        if (args.length != 1) {
             // Print usage message and exit
             System.err.println("Usage: java search.REsearch <filename>");
             System.exit(1);
@@ -52,16 +53,23 @@ public class REsearch {
         ch    = new char[maxState + 1];
         next1 = new int [maxState + 1];
         next2 = new int [maxState + 1];
+        isWildcard = new boolean[maxState + 1];  // Initialize isWildcard array
+
         for (String line : fsmLines) {
             String[] parts = line.split(",");
             int stateNum = Integer.parseInt(parts[0]);
             if (parts[1].equals("BR")) {
                 ch[stateNum] = '\0';
+                isWildcard[stateNum] = false;
             } else if (parts[1].equals("WC")) {
-                ch[stateNum] = '.';
-            } else {
-                // handle literal character
+                ch[stateNum] = '.';  // Optional, kept for consistency
+                isWildcard[stateNum] = true;
+            } else if (!parts[1].isEmpty()) {
+                // handle literal character, including escaped characters like '\'
                 ch[stateNum] = parts[1].charAt(0);
+                isWildcard[stateNum] = false;
+            } else {
+                // Accepting state, do nothing for ch and isWildcard
             }
             
             // setting first and second next states
@@ -118,7 +126,7 @@ public class REsearch {
                     // add second branch
                     if (next2[state] != -1) current.addBack(next2[state]);
                 // handle character match
-                } else if (ch[state] == c || ch[state] == '.') {
+                } else if (isWildcard[state] || ch[state] == c) {  // Updated condition
                     // add next state
                     if (next1[state] != -1) next.addBack(next1[state]);
                 }
@@ -131,29 +139,29 @@ public class REsearch {
             // add start state for new match possibility
             current.addBack(0);
         }
-            // set to track visited states
-            Set<Integer> visited = new HashSet<>();
-            Dequeue closure = new Dequeue();
-            // move all states from current to closure
-            while (!current.isEmpty()) {
-                closure.addBack(current.removeFront());
+        // set to track visited states
+        Set<Integer> visited = new HashSet<>();
+        Dequeue closure = new Dequeue();
+        // move all states from current to closure
+        while (!current.isEmpty()) {
+            closure.addBack(current.removeFront());
+        }
+        // explore all reachable states from the closure
+        while (!closure.isEmpty()) {
+            int s = closure.removeFront();
+            // if already visited, skip
+            if (visited.contains(s)) continue;
+            // mark state as visited
+            visited.add(s);
+            //handle branching states
+            if (ch[s] == '\0') {
+                // add first branch
+                if (next1[s] != -1) closure.addBack(next1[s]);
+                // add second branch
+                if (next2[s] != -1) closure.addBack(next2[s]);
             }
-            // explore all reachable states from the closure
-            while (!closure.isEmpty()) {
-                int s = closure.removeFront();
-                // if already visited, skip
-                if (visited.contains(s)) continue;
-                // mark state as visited
-                visited.add(s);
-                //handle branching states
-                if (ch[s] == '\0') {
-                    // add first branch
-                    if (next1[s] != -1) closure.addBack(next1[s]);
-                    // add second branch
-                    if (next2[s] != -1) closure.addBack(next2[s]);
-                }
-                current.addBack(s);
-            }
+            current.addBack(s);
+        }
 
         // check for accepting states in final queue
         while (!current.isEmpty()) {
