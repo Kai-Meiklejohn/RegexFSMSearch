@@ -195,7 +195,7 @@ main():
 | `a`         | Yes    | single literal                |
 | `.`         | Yes    | wildcard                      |
 | `ab*`       | Yes    | concatenation + closure       |
-| `(a|b)+c?`  | Yes    | alternation, closure, optional|
+| `(a(straight bar)b)+c?`  | Yes    | alternation, closure, optional|
 | `\*a\?`     | Yes    | literals `*` and `?` escaped  |
 | `a+b`       | Yes    | alternation                   |
 | `a*`        | No     | can't have more than one `*`  |
@@ -216,7 +216,7 @@ main():
 | `*`           | Closure: **0 or more** of the preceding item   | `a*`       | `""`, `"a"`, `"aaaa"`         | `"b"`                   |
 | `+`           | **1 or more** of the preceding item            | `a+`       | `"a"`, `"aa"`, `"aaaaa"`      | `""`                    |
 | `?`           | **0 or 1** of the preceding item               | `a?`       | `""`, `"a"`                   | `"aa"`                  |
-| `|`           | Alternation: match **either** side             | `a|b`      | `"a"`, `"b"`                  | `"ab"`                  |
+| `(straight bar)`           | Alternation: match **either** side             | `a(straight bar)b`      | `"a"`, `"b"`                  | `"ab"`                  |
 | `(` `)`       | Grouping: treat sub-expression as one unit     | `(ab)*`    | `""`, `"ab"`, `"abab"`        | `"a"`, `"ba"`           |
 | `\` (escape)  | Next character is **literal**, not special     | `\*`       | `"*"`                         | `"a"`, `"**"`           |
 
@@ -230,7 +230,7 @@ main():
 | 2          | Grouping (`(` `)`)   | Controls order of evaluation                     |
 | 3          | Repetition (`*`, `+`, `?`) | Apply to the immediately preceding item       |
 | 4          | Concatenation        | Juxtaposition (e.g. `ab` means `a` then `b`)     |
-| 5          | Alternation (`|`)    | Lowest: split into two separate paths            |
+| 5          | Alternation (`(straight bar)`)    | Lowest: split into two separate paths            |
 
 ---
 
