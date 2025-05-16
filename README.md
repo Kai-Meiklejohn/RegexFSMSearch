@@ -13,19 +13,19 @@ This program is a two-part system for working with regular expressions and searc
    - Navigate to the respective directories and compile the Java files:
      ```bash
      cd compile
-     javac compile/REcompile.java compile/Compiler.java
+     javac REcompile.java Compiler.java
      cd ../search
-     javac search/REsearch.java
+     javac REsearch.java
      ```
 
 2. **Run the Programs Together**:
    - Use a pipe to connect the output of `REcompile` to the input of `REsearch`:
      ```bash
-     java compile.REcompile "<regular_expression>" | java search.REsearch <filename>
+     java REcompile "<regular_expression>" | java REsearch <filename>
      ```
    - Example:
      ```bash
-     java compile.REcompile "hugged" | java search.REsearch examples/simple.txt
+     java REcompile "hugged" | java REsearch examples/simple.txt
      ```
 
 3. **What Happens**:
@@ -37,7 +37,7 @@ This program is a two-part system for working with regular expressions and searc
 
 - To search for the word "hugged" in `examples/simple.txt`:
   ```bash
-  java compile.REcompile "hug*ed" | java search.REsearch examples/simple.txt
+  java compile.REcompile "hug*ed" | java REsearch examples/simple.txt
   ```
   Output:
   ```
@@ -73,14 +73,14 @@ This part of the project involves building a non-deterministic finite-state mach
 ### Compiling
 
 ```bash
-javac compile/REcompile.java compile/Compiler.java
+javac REcompile.java Compiler.java
 ```
 
 ### Running
 
 ```bash
 # Build FSM from your regex and save to fsm.txt
-java compile.REcompile "(a|b)*abb"
+java REcompile "(a|b)*abb"
 ```
 
 Each line of the output has the form:
@@ -215,7 +215,7 @@ main():
 | **Concatenation**<br>(juxtaposition) | Adjacent patterns match in sequence      | `ab`       | `"ab"`                        | `"a"`, `"b"`, `"abc"`   |
 | `*`           | Closure: **0 or more** of the preceding item   | `a*`       | `""`, `"a"`, `"aaaa"`         | `"b"`                   |
 | `+`           | **1 or more** of the preceding item            | `a+`       | `"a"`, `"aa"`, `"aaaaa"`      | `""`                    |
-| `?`           | **0 or 1** of the preceding item               | `a?`       | `""`, `"a"`                   | `"aa"`                  |
+| `?`           | **0 or 1** of the preceding item               | `a?`       | `""`, `"a"`                   | `"ba"`                  |
 | `(straight bar)`           | Alternation: match **either** side             | `a(straight bar)b`      | `"a"`, `"b"`                  | `"ab"`                  |
 | `(` `)`       | Grouping: treat sub-expression as one unit     | `(ab)*`    | `""`, `"ab"`, `"abab"`        | `"a"`, `"ba"`           |
 | `\` (escape)  | Next character is **literal**, not special     | `\*`       | `"*"`                         | `"a"`, `"**"`           |
@@ -250,20 +250,20 @@ This part of the project implements the **pattern searcher**, which reads an FSM
 
 ```bash
 cd RegexFSMSearch
-javac -d . search/REsearch.java
+javac -d . REsearch.java
 ```
 ### Running
 
 #### from file
 
 ```bash
-Get-Content fsm.txt | java -cp . search.REsearch simple.txt
+Get-Content fsm.txt | java -cp . REsearch simple.txt
 ```
 
 #### from pipe
 
 ```bash
-java compile.REcompile "(a|b)*abb" | java search.REsearch simple.txt
+java REcompile "(a|b)*abb" | java REsearch simple.txt
 ```
 
 ### What it does
@@ -403,7 +403,7 @@ the dog was kissed by the dog .
 the cat was hugged by the bird . 
 the fish hugged the fish . 
 a dog was found by a cat . 
-the dog was found by the moose . 
+the dog was found by the moose . search
 the mouse hugged the dog . 
 the bird loved a cat . 
 a bird was chased by a fish . 

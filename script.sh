@@ -79,7 +79,7 @@ declare -a test_cases=(
   "a+: " # should not match
   "a?: "
   "a?:a"
-  "a?:aa" # should not match
+  "a?:ba" # should not match
   "ab*c:ac"
   "ab*c:abc"
   "ab*c:abbbc"
