@@ -2,7 +2,7 @@
 
 /**
  * REcompile.java
- * Author: Kai Meiklejohn (1632448)
+ * Author: Kai Meiklejohn 
  * 
  * Entry point: read one regexp, build FSM, print it.
  */
