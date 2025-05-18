@@ -4,7 +4,7 @@ import java.util.*;
 
 /**
  * Compiler.java
- * Author: Kai Meiklejohn (1632448)
+ * Author: Kai Meiklejohn 
  * 
  * handles parsing and compiling regexps into FSMs.
  */
