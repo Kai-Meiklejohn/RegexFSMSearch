@@ -5,7 +5,7 @@ import java.util.*;
 
 /**
  * REsearch.java
- * Author: Riley Cooney (1632444)
+ * Author: Riley Cooney
  * 
  * handles the search of a file using a finite state machine (FSM) built from a regular expression
  */
